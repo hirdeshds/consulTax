@@ -1,8 +1,25 @@
+# Environments and keys
 .env
 .env.*
+.env.local
 !.env.example
 
+# Python
 .venv/
+venv/
 __pycache__/
+*.py[cod]
+*$py.class
 .pytest_cache/
 *.pyc
+
+# Node & Next.js
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# OS files
+.DS_Store
+Thumbs.db
