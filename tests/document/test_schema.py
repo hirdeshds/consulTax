@@ -11,3 +11,4 @@ def test_schema_contract_exports_and_validates():
     assert analyze.tax_profile.profile_id == "p-1"
     assert chat.message == "What deductions apply?"
     assert document.income.salary == 150000.0
+

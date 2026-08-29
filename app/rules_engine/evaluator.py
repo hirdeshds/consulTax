@@ -446,7 +446,17 @@ def evaluate_tax_profile(
     updated_profile.net_taxable_income = best_calc["net_taxable_income"]
     updated_profile.total_tax_liability = best_calc["total_tax_liability"]
     updated_profile.regime_preference = recommended_regime
+
+    # Set computed standard deduction in profile for downstream exports/checks
+    std_ded = 0.0
+    for rule in applied_rules:
+        if rule.rule_id == "sec_standard_deduction":
+            std_ded = rule.eligible_amount
+            break
+    updated_profile.deductions.standard_deduction = std_ded
+
     updated_profile.refund_or_due_amount = round(
+
         best_calc["total_tax_liability"] - (updated_profile.tax_paid_tds + updated_profile.tax_paid_advance + updated_profile.tax_paid_self_assessment),
         2
     )
