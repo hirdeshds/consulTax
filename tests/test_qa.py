@@ -153,7 +153,12 @@ def test_chat_interaction_streaming(client, monkeypatch):
 
 
 def test_chat_empty_message_error(client):
-    """Test validation errors for empty messages."""
-    response = client.post("/api/qa/chat", json={"message": ""})
-    assert response.status_code == 400
-    assert "Message cannot be empty" in response.json()["detail"]
+    """Test validation errors for empty/whitespace messages."""
+    # Empty string triggers Pydantic's min_length validation (422)
+    response_pydantic = client.post("/api/qa/chat", json={"message": ""})
+    assert response_pydantic.status_code == 422
+
+    # Whitespace-only string passes min_length but triggers our custom 400 validation
+    response_custom = client.post("/api/qa/chat", json={"message": "   "})
+    assert response_custom.status_code == 400
+    assert "Message cannot be empty" in response_custom.json()["detail"]

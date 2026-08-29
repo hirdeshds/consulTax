@@ -1,7 +1,8 @@
-"""LLM response generation module using Groq (llama-3.3-70b) and Cohere command-r fallbacks."""
+"""LLM response generation module using standard library urllib to query Groq and Cohere REST APIs."""
 
-import cohere
-from groq import Groq
+import json
+import urllib.request
+import urllib.error
 from typing import List, Dict, Any, Optional, Generator
 
 from app.config import settings
@@ -76,6 +77,77 @@ def build_system_and_user_prompts(
     return system_prompt, user_content
 
 
+def call_groq_rest(messages: List[Dict[str, str]], stream: bool = False) -> Any:
+    """Helper to query Groq chat completion API using standard urllib POST request."""
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {settings.GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": settings.GROQ_MODEL,
+        "messages": messages,
+        "stream": stream
+    }
+    
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers=headers,
+        method="POST"
+    )
+    
+    try:
+        response = urllib.request.urlopen(req)
+        return response
+    except urllib.error.HTTPError as e:
+        err_msg = e.read().decode("utf-8")
+        raise RuntimeError(f"Groq API returned HTTP {e.code}: {err_msg}")
+    except Exception as e:
+        raise RuntimeError(f"Groq API connection failed: {str(e)}")
+
+
+def call_cohere_rest(messages: List[Dict[str, str]], stream: bool = False) -> Any:
+    """Helper to query Cohere chat V2 API using standard urllib POST request."""
+    url = "https://api.cohere.com/v2/chat"
+    headers = {
+        "Authorization": f"Bearer {settings.COHERE_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    # Map messages to Cohere format
+    cohere_messages = []
+    for msg in messages:
+        role = msg["role"]
+        content = msg["content"]
+        if role in ("system", "user", "assistant"):
+            cohere_messages.append({"role": role, "content": content})
+        else:
+            cohere_messages.append({"role": "assistant", "content": content})
+            
+    payload = {
+        "model": settings.COHERE_MODEL,
+        "messages": cohere_messages,
+        "stream": stream
+    }
+    
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers=headers,
+        method="POST"
+    )
+    
+    try:
+        response = urllib.request.urlopen(req)
+        return response
+    except urllib.error.HTTPError as e:
+        err_msg = e.read().decode("utf-8")
+        raise RuntimeError(f"Cohere API returned HTTP {e.code}: {err_msg}")
+    except Exception as e:
+        raise RuntimeError(f"Cohere API connection failed: {str(e)}")
+
+
 def generate_answer(
     query: str,
     retrieved_chunks: List[DocumentChunk],
@@ -99,36 +171,22 @@ def generate_answer(
         messages.append({"role": msg.role, "content": msg.content})
     messages.append({"role": "user", "content": user_content})
     
-    # Attempt Groq LLM
+    # 1. Try Groq
     if settings.GROQ_API_KEY:
         try:
-            client = Groq(api_key=settings.GROQ_API_KEY)
-            response = client.chat.completions.create(
-                model=settings.GROQ_MODEL,
-                messages=messages,
-                stream=False
-            )
-            return response.choices[0].message.content
+            response = call_groq_rest(messages, stream=False)
+            res_data = json.loads(response.read().decode("utf-8"))
+            return res_data["choices"][0]["message"]["content"]
         except Exception as e:
             if not settings.COHERE_API_KEY:
                 raise e
                 
-    # Fallback to Cohere LLM
+    # 2. Try Cohere Fallback
     if settings.COHERE_API_KEY:
-        client = cohere.ClientV2(api_key=settings.COHERE_API_KEY)
-        cohere_messages = []
-        for m in messages:
-            role = m["role"]
-            if role in ("system", "user", "assistant"):
-                cohere_messages.append({"role": role, "content": m["content"]})
-            else:
-                cohere_messages.append({"role": "assistant", "content": m["content"]})
-                
-        response = client.chat(
-            model=settings.COHERE_MODEL,
-            messages=cohere_messages
-        )
-        return response.message.content
+        response = call_cohere_rest(messages, stream=False)
+        res_data = json.loads(response.read().decode("utf-8"))
+        # Cohere V2 response structure: message.content[0].text
+        return res_data["message"]["content"][0]["text"]
         
     raise ValueError("No LLM API keys configured in settings.")
 
@@ -156,42 +214,51 @@ def generate_answer_stream(
         messages.append({"role": msg.role, "content": msg.content})
     messages.append({"role": "user", "content": user_content})
     
-    # Attempt Groq Streaming
+    # 1. Try Groq Streaming
     if settings.GROQ_API_KEY:
         try:
-            client = Groq(api_key=settings.GROQ_API_KEY)
-            response_stream = client.chat.completions.create(
-                model=settings.GROQ_MODEL,
-                messages=messages,
-                stream=True
-            )
-            for chunk in response_stream:
-                delta = chunk.choices[0].delta
-                if delta.content:
-                    yield delta.content
+            response = call_groq_rest(messages, stream=True)
+            try:
+                for line in response:
+                    line_str = line.decode("utf-8").strip()
+                    if not line_str:
+                        continue
+                    if line_str == "data: [DONE]":
+                        break
+                    if line_str.startswith("data: "):
+                        try:
+                            data_json = json.loads(line_str[6:])
+                            delta = data_json["choices"][0]["delta"]
+                            if "content" in delta:
+                                yield delta["content"]
+                        except Exception:
+                            pass
+            finally:
+                response.close()
             return
         except Exception as e:
             if not settings.COHERE_API_KEY:
                 raise e
                 
-    # Fallback to Cohere Streaming
+    # 2. Try Cohere Streaming Fallback
     if settings.COHERE_API_KEY:
-        client = cohere.ClientV2(api_key=settings.COHERE_API_KEY)
-        cohere_messages = []
-        for m in messages:
-            role = m["role"]
-            if role in ("system", "user", "assistant"):
-                cohere_messages.append({"role": role, "content": m["content"]})
-            else:
-                cohere_messages.append({"role": "assistant", "content": m["content"]})
-                
-        response_stream = client.chat_stream(
-            model=settings.COHERE_MODEL,
-            messages=cohere_messages
-        )
-        for chunk in response_stream:
-            if chunk.type == "content-delta" and chunk.delta and chunk.delta.message:
-                yield chunk.delta.message.content
+        response = call_cohere_rest(messages, stream=True)
+        try:
+            for line in response:
+                line_str = line.decode("utf-8").strip()
+                if not line_str:
+                    continue
+                if line_str.startswith("data: "):
+                    try:
+                        data_json = json.loads(line_str[6:])
+                        # Cohere v2 content-delta structure
+                        if data_json.get("type") == "content-delta":
+                            text = data_json["delta"]["message"]["content"]["text"]
+                            yield text
+                    except Exception:
+                        pass
+        finally:
+            response.close()
         return
         
     raise ValueError("No LLM API keys configured in settings.")
