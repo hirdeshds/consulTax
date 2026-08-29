@@ -7,6 +7,7 @@ from app.main import app
 client = TestClient(app)
 
 
+
 def test_frontend_analyze_flat_profile_contract():
     """Verify that frontend flat profile payload is parsed and returns all expected keys."""
     payload = {
