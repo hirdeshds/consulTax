@@ -31,6 +31,7 @@
 
 ## Overview
 
+
 **consulTax** is a production-ready backend service that provides AI-driven Indian income tax advisory capabilities. It implements the full taxpayer workflow — from raw document upload to a downloadable, formatted PDF tax summary — entirely via a clean REST API.
 
 The system supports **both Old and New Tax Regimes (FY 2024-25 and FY 2025-26)**, applies all applicable deductions (Sections 80C through 80U, 24B, HRA, LTA), calculates slab-based tax, applies Section 87A rebates with marginal relief, and recommends the financially optimal regime for each individual taxpayer profile.
