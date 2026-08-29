@@ -384,3 +384,131 @@ npm run dev -- --port 3000
    - Type `"Why is the new regime recommended?"` or `"How much can I save under 80D?"`.
 7. **Form 16 Explainer**:
    - Upload any Form 16 PDF to see instant salary extraction, term explainers, and credit breakdown.
+
+---
+
+## 7. Complete Step-by-Step Live Demo Script for Judges
+
+### 7.1 Pitch & Hook (30 Seconds)
+> *"Hello Judges, this is **ConsulTax**—the AI-powered personal tax clarity and optimization platform. In India, choosing between the New and Old Tax Regimes and deciphering Form 16 is a massive pain point. General LLMs fail here because they hallucinate tax numbers. ConsulTax solves this with a **Dual-Engine Architecture**: 100% deterministic mathematical calculations backed by a Grounded AI Explainer that translates results into everyday plain English without hallucinating."*
+
+---
+
+### 7.2 Scenario 1: Salaried Tech Lead (New Regime Winner)
+
+#### 📝 Profile Inputs to Enter:
+- **Your Name**: `Aarav Sharma`
+- **Financial Year**: `FY 2026–27` (or `2024–25`)
+- **Age**: `32`
+- **Residential Location**: `Metro city`
+- **Gross Annual Salary**: `₹12,00,000`
+- **Interest / Other Income**: `₹30,000`
+- **Tax Already Paid (TDS)**: `₹20,000`
+- *(Leave deductions empty to simulate a modern salaried worker without heavy lock-ins).*
+
+#### 🎯 Actions & Narration:
+1. Click **"See my personalised plan"**.
+2. **Highlight the Regime Comparison**:
+   - **Recommended Route**: `New Regime`
+   - **Estimated Savings**: `₹96,980.00 lower estimated tax`
+   - **New Regime Tax**: `₹76,180.00` vs **Old Regime Tax**: `₹1,73,160.00`
+   - **Net Tax Payable**: `₹56,180.00` (after adjusting ₹20,000 TDS credit).
+3. **Expand "Show the calculation & rule trace"**:
+   - Show judges how each line is deterministically computed:
+     - Gross Income: `₹12,30,000`
+     - Standard Deduction: `₹75,000` under Section 16(ia)
+     - Taxable Income: `₹11,55,000`
+     - Base Tax: `₹73,250` + 4% Cess: `₹2,930` = `₹76,180.00`.
+4. **Explain Personalised Possibilities**:
+   - Point out proactive recommendations:
+     - **Section 80C**: Up to ₹45,000 tax saving if ₹1.5L is invested.
+     - **Section 80CCD(1B)**: Additional ₹15,000 tax saving via Tier-1 NPS.
+     - **Section 80CCD(2)**: Corporate NPS deduction (deductible in *both* regimes).
+
+---
+
+### 7.3 Scenario 2: Homeowner with High Deductions (Old Regime Winner)
+
+#### 📝 Profile Inputs to Enter:
+- **Your Name**: `Priya Patel`
+- **Financial Year**: `FY 2024–25`
+- **Age**: `36`
+- **Gross Annual Salary**: `₹18,00,000`
+- **Basic Salary**: `₹9,00,000`
+- **HRA Received**: `₹2,40,000`
+- **Annual Rent Paid**: `₹3,00,000`
+- **Provident Fund (EPF)**: `₹1,00,000`
+- **ELSS Investment**: `₹50,000` (Total 80C = `₹1,50,000`)
+- **Health Insurance (Self/Family)**: `₹25,000`
+- **Health Insurance (Parents)**: `₹50,000` (Toggle: *"I support dependent parents"* & *"A parent is 60 or older"*)
+- **Home Loan Interest (Section 24b)**: `₹2,00,000`
+- **Tax Already Paid (TDS)**: `₹1,50,000`
+
+#### 🎯 Actions & Narration:
+1. Click **"See my personalised plan"**.
+2. **Highlight the Dynamic Shift**:
+   - **Recommended Route**: `Old Regime`
+   - **Reason**: The combination of HRA exemption (₹2.1L), full 80C (₹1.5L), 80D with senior parents (₹75k), and Home Loan interest (₹2L) gives total deductions exceeding ₹6.85 Lakhs.
+   - Show that ConsulTax accurately detects when the Old Regime flips to being the mathematically superior choice.
+
+---
+
+### 7.4 Scenario 3: Senior Citizen Retiree (Pension & Medical Benefits)
+
+#### 📝 Profile Inputs to Enter:
+- **Your Name**: `Ramachandran`
+- **Financial Year**: `FY 2024–25`
+- **Age**: `68`
+- **Gross Annual Salary (Pension)**: `₹5,00,000`
+- **Interest / Other Income (FDs)**: `₹3,40,000`
+- **Health Insurance / Medical Spend**: `₹40,000`
+- **Tax Already Paid**: `₹10,000`
+
+#### 🎯 Actions & Narration:
+1. Click **"See my personalised plan"**.
+2. **Highlight Senior Citizen Special Rules**:
+   - Standard deduction on pension income.
+   - Higher basic exemption limit under Old Regime slabs.
+   - Section 80D senior medical spend allowances without insurance lock-in.
+
+---
+
+### 7.5 Interactive Q&A Assistant Demo (6 Test Questions)
+
+Use the interactive **"Ask about this calculation"** box at the bottom of the results card. Test the following varied questions to demonstrate grounded RAG retrieval:
+
+#### Question 1 (Regime Reasoning):
+> **Query**: `Why is the new regime recommended for my salary?`
+> **Expected Answer**: Clarifies that with current deductions, the lower tax slab rates and higher Standard Deduction (₹75,000) under the New Regime result in lower overall tax liability.
+
+#### Question 2 (Section 80CCD(2) — Corporate NPS):
+> **Query**: `Can I get NPS deduction in the New Tax Regime?`
+> **Expected Answer**: Explains that **Section 80CCD(2)** (employer's contribution up to 14% of basic salary) is allowed under the New Tax Regime, whereas voluntary Section 80CCD(1B) is only available under the Old Regime.
+
+#### Question 3 (Section 80D — Senior Citizen Parents):
+> **Query**: `What is the health insurance deduction limit for senior citizen parents?`
+> **Expected Answer**: Cites that under Section 80D, a deduction of up to **₹50,000** is available for senior citizen parents (age 60+), and uninsured senior parents can also claim medical expenditures up to ₹50,000.
+
+#### Question 4 (Section 80C Availability):
+> **Query**: `Can I claim Section 80C in the new tax regime?`
+> **Expected Answer**: Directly clarifies that Section 80C deductions (EPF, PPF, ELSS, Life Insurance) are **not** permitted under the New Tax Regime and apply only under the Old Regime.
+
+#### Question 5 (Section 80E — Higher Education Loan):
+> **Query**: `Is there any limit on education loan interest deduction under Section 80E?`
+> **Expected Answer**: Explains that Section 80E allows a **100% deduction with no upper monetary cap** on the interest paid for up to 8 consecutive financial years.
+
+#### Question 6 (TDS Credit Clarification):
+> **Query**: `How is my TDS treated in this calculation?`
+> **Expected Answer**: Explains that TDS is a pre-paid tax credit already deposited with the government by your employer and directly reduces your remaining tax payable or results in a tax refund.
+
+---
+
+### 7.6 Form 16 Jargon-Free Document Upload Demo
+
+1. Scroll down to the **"FORM 16, EXPLAINED"** section.
+2. Click the upload button and select any Form 16 PDF (or use the sample PDF).
+3. **Showcase the Result**:
+   - **Plain-English Summary**: Highlights gross salary, total deductions, and net taxable income.
+   - **Key Figures Grid**: Displays extracted values (`Gross Salary`, `Standard Deduction`, `Section 80C`, `Tax Deducted (TDS)`).
+   - **Terms Explained Accordion**: Clarifies `Gross salary`, `Standard deduction`, `Chapter VI-A`, `Taxable income`, and `TDS`.
+   - **Filing Gaps Warnings**: Reminds the taxpayer to declare other income (interest, dividends, rental) before submitting their return.
