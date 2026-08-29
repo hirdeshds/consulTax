@@ -1,4 +1,4 @@
-"""API request and response schemas for consulTax."""
+"""API request and response schemas for consulTax supporting both API clients and web frontend."""
 
 from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional, Union
@@ -56,8 +56,8 @@ class AnalyzeRequest(BaseModel):
     profile: Optional[Union[FrontendProfileInput, Dict[str, Any]]] = None
     document: Optional[TaxDocument] = None
     tax_profile: Optional[TaxProfile] = None
-    sessionId: Optional[str] = None
-    session_id: Optional[str] = None
+    sessionId: Optional[str] = Field(default=None)
+    session_id: Optional[str] = Field(default=None)
     financial_year: Optional[str] = None
     include_recommendations: bool = True
 
@@ -78,6 +78,7 @@ class SchemeResult(BaseModel):
 
 
 class FrontendTaxResult(BaseModel):
+    model_config = {"extra": "allow"}
     gross_income: float = 0.0
     taxable_income: float = 0.0
     total_tax: float = 0.0
@@ -90,10 +91,12 @@ class FrontendTaxResult(BaseModel):
     deductions_claimed: float = 0.0
     deduction_breakdown: Dict[str, float] = Field(default_factory=dict)
     excluded_income: Dict[str, float] = Field(default_factory=dict)
+    schemes: List[Any] = Field(default_factory=list)
     trace: List[str] = Field(default_factory=list)
 
 
 class FrontendRecommendation(BaseModel):
+    model_config = {"extra": "allow"}
     section: str
     title: str
     potential_deduction: Optional[float] = None
@@ -103,6 +106,7 @@ class FrontendRecommendation(BaseModel):
 
 
 class FrontendComparison(BaseModel):
+    model_config = {"extra": "allow"}
     new: FrontendTaxResult
     old: FrontendTaxResult
     recommended_regime: str = "new"
@@ -111,14 +115,18 @@ class FrontendComparison(BaseModel):
 
 
 class AnalyzeResponse(BaseModel):
+    # Frontend Analysis fields
     session_id: Optional[str] = None
+    profile: Optional[Dict[str, Any]] = None
     explanation: Optional[str] = None
     warnings: List[str] = Field(default_factory=list)
-    result: Optional[FrontendTaxResult] = None
-    comparison: Optional[FrontendComparison] = None
-    recommendations: List[FrontendRecommendation] = Field(default_factory=list)
+    result: Optional[Union[FrontendTaxResult, Dict[str, Any]]] = None
+    comparison: Optional[Union[FrontendComparison, Dict[str, Any]]] = None
+    recommendations: Optional[Union[List[FrontendRecommendation], List[Dict[str, Any]]]] = Field(default_factory=list)
+
+    # Contract & Test fields
     deductions: List[DeductionResult] = Field(default_factory=list)
-    schemes: List[SchemeResult] = Field(default_factory=list)
+    schemes: Any = Field(default_factory=list)
     tax_profile: Optional[TaxProfile] = None
     recommended_regime: Optional[TaxRegime] = None
     old_regime_liability: Optional[float] = None
@@ -141,7 +149,7 @@ class ChatRequest(BaseModel):
     session_id: Optional[str] = Field(None, description="Unique session identifier for multi-turn conversations")
     sessionId: Optional[str] = Field(None, description="CamelCase alias for session identifier")
     message: Optional[str] = Field(default=None, min_length=1, description="User's query or prompt to the tax assistant")
-    question: Optional[str] = Field(default=None, min_length=1, description="Frontend alias for user question")
+    question: Optional[str] = Field(default=None, min_length=1, description="Alternative key for user query from web UI")
     tax_profile: Optional[TaxProfile] = Field(None, description="Taxpayer profile context for personalized responses")
     document_ids: Optional[List[str]] = Field(default_factory=list, description="IDs of relevant documents for grounded QA")
     history: Optional[List[ChatMessage]] = Field(default_factory=list, description="Prior conversation messages")
@@ -196,13 +204,26 @@ class Form16SummaryResponse(BaseModel):
 class SimulateRequest(BaseModel):
     tax_profile: Optional[TaxProfile] = None
     profile: Optional[Union[FrontendProfileInput, Dict[str, Any]]] = None
-    adjustments: Dict[str, Any] = Field(default_factory=dict)
+    adjustments: Optional[Dict[str, Any]] = Field(default_factory=dict)
     target_regime: Optional[TaxRegime] = None
+    
+    # Frontend parameters
+    session_id: Optional[str] = None
+    changes: Optional[Dict[str, Any]] = None
 
 
 class SimulateResponse(BaseModel):
-    original_liability: float
-    projected_liability: float
-    net_savings: float
+    original_liability: Optional[float] = 0.0
+    projected_liability: Optional[float] = 0.0
+    net_savings: Optional[float] = 0.0
     rule_breakdown: List[RuleResult] = Field(default_factory=list)
+
+    # Full analysis response for interactive web UI
+    session_id: Optional[str] = None
+    profile: Optional[Dict[str, Any]] = None
+    explanation: Optional[str] = None
+    warnings: List[str] = Field(default_factory=list)
+    result: Optional[Dict[str, Any]] = None
+    comparison: Optional[Dict[str, Any]] = None
+    recommendations: Optional[List[Dict[str, Any]]] = None
     disclaimer: str = Field(default=DISCLAIMER, description="Regulatory disclaimer — not a certified tax authority")

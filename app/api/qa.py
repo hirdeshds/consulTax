@@ -6,11 +6,11 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 
+from app.qa.answer_generator import generate_answer, generate_answer_stream
+from app.qa.retrieval import get_retriever, TFIDFRetriever
+from app.rules_engine.evaluator import evaluate_tax_profile
 from app.schemas.api import ChatCitation, ChatMessage, ChatRequest, ChatResponse
 from app.session import get_session_store, SessionStore
-from app.qa.retrieval import get_retriever, TFIDFRetriever
-from app.qa.answer_generator import generate_answer, generate_answer_stream
-from app.rules_engine.evaluator import evaluate_tax_profile
 
 router = APIRouter(prefix="/qa", tags=["qa"])
 
@@ -27,13 +27,12 @@ async def chat_interaction(
     invokes the LLM to generate an answer, updates session history, and returns citations.
     Supports both { question, session_id } and { message, session_id } formats.
     """
-    query_text = request.question or request.message
-    if not query_text or not query_text.strip():
+    query_text = (request.question or request.message or "").strip()
+    if not query_text:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Message cannot be empty.",
         )
-    query_text = query_text.strip()
 
     # 1. Retrieve or initialize user session
     session_id = request.session_id or request.sessionId

@@ -15,11 +15,17 @@ __pycache__/
 
 # Node & Next.js
 node_modules/
+**/node_modules/
 .next/
+**/.next/
 out/
 build/
 dist/
+*.node
+package-lock.json
 
-# OS files
+# OS & Temp
 .DS_Store
 Thumbs.db
+__MACOSX/
+**/__MACOSX/

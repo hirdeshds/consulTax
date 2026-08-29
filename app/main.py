@@ -15,6 +15,7 @@ from app.api.session import router as session_router
 from app.api.export import router as export_router
 from app.api.form16 import router as form16_router
 from app.api.rules_diff import router as rules_diff_router
+from app.api.sample_documents import router as sample_documents_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -54,6 +55,7 @@ app.include_router(simulate_router, prefix="/api")
 app.include_router(session_router, prefix="/api")
 app.include_router(export_router, prefix="/api")
 app.include_router(rules_diff_router, prefix="/api")
+app.include_router(sample_documents_router, prefix="/api")
 
 
 @app.get("/")
