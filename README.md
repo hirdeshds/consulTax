@@ -125,66 +125,151 @@ All LLM calls have local fallbacks — if API keys are absent, the system uses d
 
 ## System Design
 
-### Request Flow — Tax Analysis
+### High-Level Architecture
 
+```mermaid
+flowchart LR
+    Client["Client\nWeb / Mobile / API"]
+
+    Backend["FastAPI Backend\nPython + Gunicorn / Uvicorn"]
+
+    LLM["LLM APIs\nClaude · Cohere · Groq"]
+
+    Store["Session Store\nIn-Memory / Supabase"]
+
+    PDF["PDF Engine\nReportLab"]
+
+    Rules["Rules Engine\nJSON Config v2024-25 / v2025-26"]
+
+    Client -->|"REST / JSON"| Backend
+    Backend -->|"Vision OCR · Q&A · Explain"| LLM
+    Backend -->|"Read / Write Session"| Store
+    Backend -->|"Generate Filing Summary"| PDF
+    Backend -->|"Evaluate Slabs · Deductions"| Rules
 ```
-Client
-  │
-  ▼
-POST /api/ocr/upload  ──► ClaudeVisionParser ──► DocumentData (stored in session)
-  │
-  ▼
-POST /api/analyze  ──► map_session_documents_to_profile()
-                   ──► evaluate_tax_profile()
-                         ├── calculate_gross_income()
-                         ├── apply_standard_deduction()
-                         ├── evaluate_80C_80D_deductions()
-                         ├── calculate_slab_tax()
-                         ├── apply_rebate_87a()  [with marginal relief]
-                         ├── apply_surcharge()
-                         └── apply_cess()
-                   ──► validate_ocr_vs_computed()  [dual-check]
-                   ──► generate_explanation()
-                   └──► AnalyzeResponse (JSON)
-  │
-  ▼
-POST /api/simulate  ──► what-if profile delta
-                   ──► re-run evaluate_tax_profile()
-                   └──► SimulateResponse (savings delta)
-  │
-  ▼
-GET /api/export/pdf ──► ReportLab PDF generation
-                    └──► application/pdf (download)
+
+---
+
+### Request Flow — Document Upload → Tax Analysis → PDF Export
+
+```mermaid
+flowchart LR
+    Upload["POST /api/ocr/upload\nDocument File"]
+    Claude["Claude Vision Parser\nField Extraction"]
+    DocStore["DocumentData\nStored in Session"]
+
+    Analyze["POST /api/analyze\nProfile Computation"]
+    Mapper["map_session_documents\n_to_profile()"]
+    Engine["Rules Engine\nevaluate_tax_profile()"]
+    DualCheck["Dual-Check Validator\nOCR vs Computed"]
+    Explain["Explanation Generator\nCohere / Groq"]
+    Response["AnalyzeResponse\nJSON"]
+
+    Simulate["POST /api/simulate\nWhat-if Overrides"]
+    Recompute["Re-run evaluate\n_tax_profile()"]
+    SimResponse["SimulateResponse\nSavings Delta"]
+
+    Export["GET /api/export/pdf"]
+    ReportLab["ReportLab PDF Builder"]
+    Download["application/pdf\nDownload"]
+
+    Upload -->|"multipart/form-data"| Claude
+    Claude -->|"extracted_fields"| DocStore
+    DocStore -->|"session_id"| Analyze
+    Analyze --> Mapper
+    Mapper --> Engine
+    Engine -->|"computed totals"| DualCheck
+    DualCheck -->|"warnings"| Explain
+    Explain -->|"nl_explanation"| Response
+
+    Response -->|"session_id"| Simulate
+    Simulate --> Recompute
+    Recompute --> SimResponse
+
+    SimResponse -->|"session_id"| Export
+    Export --> ReportLab
+    ReportLab --> Download
 ```
+
+---
+
+### Rules Engine Evaluation Pipeline
+
+```mermaid
+flowchart LR
+    Profile["TaxProfile\nIncome + Deductions"]
+    RulesJSON["Rules Config\nv2024-25.json"]
+
+    GrossIncome["calculate_gross\n_income()"]
+    StdDed["apply_standard\n_deduction()"]
+    Deductions["evaluate_80C–80U\ndeductions()"]
+    SlabTax["calculate_slab\n_tax()"]
+    Rebate["apply_rebate\n_87A() + marginal relief"]
+    Surcharge["apply_surcharge()"]
+    Cess["apply_cess() × 4%"]
+    NetTax["Net Tax Liability\n+ Refund / Due Amount"]
+
+    Profile -->|"income streams"| GrossIncome
+    RulesJSON -->|"slab rates"| SlabTax
+    RulesJSON -->|"deduction limits"| Deductions
+    RulesJSON -->|"rebate threshold"| Rebate
+
+    GrossIncome --> StdDed
+    StdDed --> Deductions
+    Deductions --> SlabTax
+    SlabTax --> Rebate
+    Rebate --> Surcharge
+    Surcharge --> Cess
+    Cess --> NetTax
+```
+
+---
 
 ### Session Lifecycle
 
+```mermaid
+flowchart LR
+    Create["POST /api/session/create\nSessionData · TTL=1800s"]
+    OCR["POST /api/ocr/upload\n?session_id=..."]
+    Analyze["POST /api/analyze\n?session_id=..."]
+    Chat["POST /api/qa/chat\n?session_id=..."]
+    Delete["DELETE /api/session\n/{session_id}"]
+
+    DocData["DocumentData\nAttached to Session"]
+    TaxProfile["TaxProfile\nBuilt + Cached"]
+    History["ChatMessage History\nAppended"]
+    Evicted["Session Evicted\nMemory Freed"]
+
+    Create -->|"session_id issued"| OCR
+    Create -->|"session_id issued"| Analyze
+    Create -->|"session_id issued"| Chat
+    OCR -->|"stores"| DocData
+    Analyze -->|"computes & caches"| TaxProfile
+    Chat -->|"appends"| History
+    Create -->|"TTL expires or"| Delete
+    Delete --> Evicted
 ```
-POST /api/session/create  ──► SessionData { session_id, ttl=1800s }
-        │
-        ├── POST /api/ocr/upload?session_id=...  ──► Attaches DocumentData to session
-        ├── POST /api/analyze?session_id=...     ──► Reads session docs → computes profile
-        ├── POST /api/qa/chat?session_id=...     ──► Appends to chat history in session
-        └── DELETE /api/session/{id}             ──► Evicts session
-```
+
+---
 
 ### Data Model Relationships
 
-```
-SessionData
-  ├── documents: Dict[str, DocumentData]   ← populated by /ocr/upload
-  ├── tax_profile: TaxProfile              ← built and cached by /analyze
-  └── chat_history: List[ChatMessage]      ← appended by /qa/chat
+```mermaid
+flowchart LR
+    Session["SessionData"]
+    DocData["DocumentData\nextracted_fields\nconfidence_scores"]
+    Profile["TaxProfile\ngross_total_income\nnet_taxable_income\ntotal_tax_liability"]
+    Income["IncomeDetails\n6 income streams"]
+    Deductions["DeductionDetails\n20+ sections"]
+    Chat["ChatMessage\nrole · content · ts"]
+    RuleResult["RuleResult\neligible_amount\npotential_savings"]
 
-TaxProfile
-  ├── income: IncomeDetails                ← 6 income stream fields
-  ├── deductions: DeductionDetails         ← 20+ named deduction fields
-  └── computed fields:
-        gross_total_income
-        total_deductions
-        net_taxable_income
-        total_tax_liability
-        refund_or_due_amount
+    Session -->|"documents dict"| DocData
+    Session -->|"tax_profile"| Profile
+    Session -->|"chat_history"| Chat
+    Profile -->|"income"| Income
+    Profile -->|"deductions"| Deductions
+    Profile -->|"rule_results"| RuleResult
 ```
 
 ---
