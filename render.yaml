@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: consultax
+    runtime: docker
+    plan: free
+    repo: .
+    dockerCommand: "gunicorn app.main:app --bind 0.0.0.0:$PORT --workers 2 --worker-class uvicorn.workers.UvicornWorker"
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: APP_NAME
+        value: Tax Assistant
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: SESSION_TTL_SECONDS
+        value: "1800"
+      - key: COHERE_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: COHERE_MODEL
+        value: command-r-plus
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
