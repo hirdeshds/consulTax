@@ -540,10 +540,13 @@ Open `.env` and fill in your API keys (see [Configuration](#configuration--envir
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The API will be available at:
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-- **Health Check**: http://localhost:8000/
+The API is available at:
+- **Production Swagger UI**: https://consultax.onrender.com/docs
+- **Production ReDoc**: https://consultax.onrender.com/redoc
+- **Production Base API**: https://consultax.onrender.com/api
+- **Local Swagger UI**: http://localhost:8000/docs
+- **Local ReDoc**: http://localhost:8000/redoc
+- **Local Health Check**: http://localhost:8000/
 
 ### 6. Run with Gunicorn (Production Mode Locally)
 
