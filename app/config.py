@@ -10,14 +10,15 @@ class Settings:
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
 
-    Cohare_API_KEY: str | None = os.getenv("ANTHROPIC_API_KEY")
-    OPENAI_API_KEY: str | None = os.getenv("OPENAI_API_KEY")
+    COHERE_API_KEY: str | None = os.getenv("COHERE_API_KEY")
+    GROQ_API_KEY: str | None = os.getenv("GROQ_API_KEY")
+
+    COHERE_MODEL: str = os.getenv("COHERE_MODEL", "command-r-plus")
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
     SESSION_TTL_SECONDS: int = int(
         os.getenv("SESSION_TTL_SECONDS", "1800")
     )
-
-    REDIS_URL: str | None = os.getenv("REDIS_URL")
 
     SUPABASE_URL: str | None = os.getenv("SUPABASE_URL")
     SUPABASE_ANON_KEY: str | None = os.getenv("SUPABASE_ANON_KEY")

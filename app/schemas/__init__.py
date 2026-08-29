@@ -1,29 +1,3 @@
-<<<<<<< HEAD
-from app.schemas.api import (
-    AnalyzeRequest,
-    AnalyzeResponse,
-    DeductionResult,
-    SchemeResult,
-)
-
-from app.schemas.domain import (
-    Expenses,
-    Income,
-    Investments,
-    TaxDocument,
-)
-
-__all__ = [
-    "AnalyzeRequest",
-    "AnalyzeResponse",
-    "DeductionResult",
-    "SchemeResult",
-    "Expenses",
-    "Income",
-    "Investments",
-    "TaxDocument",
-]
-=======
 """Schemas package exporting domain and API models."""
 
 from app.schemas.api import (
@@ -33,7 +7,9 @@ from app.schemas.api import (
     ChatMessage,
     ChatRequest,
     ChatResponse,
+    DeductionResult,
     OCRUploadResponse,
+    SchemeResult,
     SimulateRequest,
     SimulateResponse,
 )
@@ -41,14 +17,22 @@ from app.schemas.domain import (
     DeductionDetails,
     DocumentData,
     DocumentType,
+    Expenses,
+    Income,
     IncomeDetails,
+    Investments,
     RuleCategory,
     RuleResult,
+    TaxDocument,
     TaxProfile,
     TaxRegime,
 )
 
 __all__ = [
+    "Income",
+    "Expenses",
+    "Investments",
+    "TaxDocument",
     "TaxProfile",
     "DocumentData",
     "RuleResult",
@@ -63,8 +47,9 @@ __all__ = [
     "ChatCitation",
     "AnalyzeRequest",
     "AnalyzeResponse",
+    "DeductionResult",
+    "SchemeResult",
     "OCRUploadResponse",
     "SimulateRequest",
     "SimulateResponse",
 ]
->>>>>>> 792571d431b0516ede938b56d17e846fa889d0c1
