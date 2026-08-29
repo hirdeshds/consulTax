@@ -1,6 +1,10 @@
-<<<<<<< HEAD
+"""Domain schemas and core data models for consulTax."""
+
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
-from typing import Literal
 
 
 class Income(BaseModel):
@@ -25,16 +29,9 @@ class Investments(BaseModel):
 
 
 class TaxDocument(BaseModel):
-    income: Income
-    expenses: Expenses = Expenses()
-    investments: Investments = Investments()
-=======
-"""Domain schemas and core data models for consulTax."""
-
-from datetime import datetime
-from enum import Enum
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+    income: Income = Field(default_factory=Income)
+    expenses: Expenses = Field(default_factory=Expenses)
+    investments: Investments = Field(default_factory=Investments)
 
 
 class TaxRegime(str, Enum):
@@ -101,6 +98,7 @@ class DeductionDetails(BaseModel):
 
 class TaxProfile(BaseModel):
     """Core domain model representing a taxpayer's complete profile and financial details."""
+
     profile_id: Optional[str] = None
     user_id: Optional[str] = None
     financial_year: str = "2024-2025"
@@ -126,6 +124,7 @@ class TaxProfile(BaseModel):
 
 class DocumentData(BaseModel):
     """Domain model for parsed document data extracted via OCR or user upload."""
+
     document_id: str
     document_type: DocumentType = DocumentType.OTHER
     filename: Optional[str] = None
@@ -141,6 +140,7 @@ class DocumentData(BaseModel):
 
 class RuleResult(BaseModel):
     """Domain model representing the evaluation outcome of an individual tax rule/scheme."""
+
     rule_id: str
     rule_name: str
     category: RuleCategory = RuleCategory.DEDUCTION
@@ -156,4 +156,4 @@ class RuleResult(BaseModel):
     recommendations: List[str] = Field(default_factory=list)
     action_items: List[str] = Field(default_factory=list)
     metadata: Dict[str, Any] = Field(default_factory=dict)
->>>>>>> 792571d431b0516ede938b56d17e846fa889d0c1
+

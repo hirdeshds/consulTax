@@ -1,14 +1,19 @@
-<<<<<<< HEAD
-from typing import Literal
+"""API request and response schemas for consulTax."""
+
+from datetime import datetime
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
-from app.schemas.domain import TaxDocument
+from app.schemas.domain import DocumentData, RuleResult, TaxDocument, TaxProfile, TaxRegime
 
 
 class AnalyzeRequest(BaseModel):
-    document: TaxDocument
-    sessionId: str = Field(min_length=1)
+    document: Optional[TaxDocument] = None
+    tax_profile: Optional[TaxProfile] = None
+    sessionId: Optional[str] = Field(default=None, min_length=1)
+    financial_year: Optional[str] = None
+    include_recommendations: bool = True
 
 
 class DeductionResult(BaseModel):
@@ -27,17 +32,16 @@ class SchemeResult(BaseModel):
 
 
 class AnalyzeResponse(BaseModel):
-    deductions: list[DeductionResult]
-    schemes: list[SchemeResult]
-    warnings: list[str] = []
-=======
-"""API request and response schemas for consulTax."""
-
-from datetime import datetime
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
-
-from app.schemas.domain import DocumentData, RuleResult, TaxProfile, TaxRegime
+    deductions: List[DeductionResult] = Field(default_factory=list)
+    schemes: List[SchemeResult] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)
+    tax_profile: Optional[TaxProfile] = None
+    recommended_regime: Optional[TaxRegime] = None
+    old_regime_liability: Optional[float] = None
+    new_regime_liability: Optional[float] = None
+    potential_savings: Optional[float] = None
+    applied_rules: List[RuleResult] = Field(default_factory=list)
+    optimization_tips: List[str] = Field(default_factory=list)
 
 
 class ChatMessage(BaseModel):
@@ -48,6 +52,7 @@ class ChatMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     """API request payload for tax assistant conversational interaction."""
+
     session_id: Optional[str] = Field(None, description="Unique session identifier for multi-turn conversations")
     message: str = Field(..., min_length=1, description="User's query or prompt to the tax assistant")
     tax_profile: Optional[TaxProfile] = Field(None, description="Taxpayer profile context for personalized responses")
@@ -67,6 +72,7 @@ class ChatCitation(BaseModel):
 
 class ChatResponse(BaseModel):
     """API response schema for chat interactions."""
+
     session_id: str
     reply: str
     citations: List[ChatCitation] = Field(default_factory=list)
@@ -74,22 +80,6 @@ class ChatResponse(BaseModel):
     rule_results: List[RuleResult] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     metadata: Dict[str, Any] = Field(default_factory=dict)
-
-
-class AnalyzeRequest(BaseModel):
-    tax_profile: TaxProfile
-    financial_year: Optional[str] = None
-    include_recommendations: bool = True
-
-
-class AnalyzeResponse(BaseModel):
-    tax_profile: TaxProfile
-    recommended_regime: TaxRegime
-    old_regime_liability: float
-    new_regime_liability: float
-    potential_savings: float
-    applied_rules: List[RuleResult] = Field(default_factory=list)
-    optimization_tips: List[str] = Field(default_factory=list)
 
 
 class OCRUploadResponse(BaseModel):
@@ -109,4 +99,4 @@ class SimulateResponse(BaseModel):
     projected_liability: float
     net_savings: float
     rule_breakdown: List[RuleResult] = Field(default_factory=list)
->>>>>>> 792571d431b0516ede938b56d17e846fa889d0c1
+
