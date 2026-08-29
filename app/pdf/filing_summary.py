@@ -287,3 +287,4 @@ def generate_filing_summary_pdf(
     pdf_bytes = buffer.getvalue()
     buffer.close()
     return pdf_bytes
+ 

@@ -157,3 +157,4 @@ These sections provide deductions on interest income earned from savings account
 
 ### Are these available in the New Tax Regime?
 No. Both Section 80TTA and 80TTB deductions are not available under the New Tax Regime.
+ 

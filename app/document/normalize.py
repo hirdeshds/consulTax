@@ -87,3 +87,4 @@ def normalize_extracted_fields(raw_fields: Mapping[str, Any]) -> dict[str, Any]:
         else:
             normalized[normalized_key] = _normalize_scalar(value)
     return normalized
+ 

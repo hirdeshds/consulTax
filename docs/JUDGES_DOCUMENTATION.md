@@ -512,3 +512,4 @@ Use the interactive **"Ask about this calculation"** box at the bottom of the re
    - **Key Figures Grid**: Displays extracted values (`Gross Salary`, `Standard Deduction`, `Section 80C`, `Tax Deducted (TDS)`).
    - **Terms Explained Accordion**: Clarifies `Gross salary`, `Standard deduction`, `Chapter VI-A`, `Taxable income`, and `TDS`.
    - **Filing Gaps Warnings**: Reminds the taxpayer to declare other income (interest, dividends, rental) before submitting their return.
+ 

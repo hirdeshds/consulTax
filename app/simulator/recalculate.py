@@ -282,3 +282,4 @@ def simulate_deduction_increments(
         prev_tax = proj_tax
 
     return steps
+ 

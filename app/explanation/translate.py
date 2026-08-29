@@ -44,3 +44,4 @@ def translate_explanation(text: str, target_lang: str) -> str:
             
     # Mock fallback translation
     return f"[{lang_name} Translation]\n{text}"
+ 

@@ -43,3 +43,4 @@ SYSTEM_TRANSLATION_PROMPT = (
     "using standard regional terms (e.g. Hindi script or clear Regional terminology) while keeping\n"
     "the formatting, bullet points, and numbers exactly the same.\n"
 )
+ 

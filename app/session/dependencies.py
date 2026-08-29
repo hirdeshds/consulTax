@@ -32,3 +32,4 @@ def require_existing_session(
             detail=f"Session '{x_session_id}' not found or expired.",
         )
     return session
+ 

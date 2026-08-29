@@ -133,3 +133,4 @@ def generate_explanation(
             
     # Mock fallback description
     return get_local_fallback_explanation(analysis, preferred_language)
+ 

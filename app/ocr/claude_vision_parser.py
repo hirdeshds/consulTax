@@ -141,3 +141,4 @@ def parse_with_claude(
 ) -> DocumentData:
     parser = ClaudeVisionParser(api_key=api_key, model=model)
     return parser.parse_document(file_path=file_path, mime_type=mime_type, document_type=document_type, filename=filename)
+ 

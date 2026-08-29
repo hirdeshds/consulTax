@@ -16,3 +16,4 @@ def calculate_expiry(ttl_seconds: Optional[int] = None) -> datetime:
 def is_expired(expiry_dt: datetime) -> bool:
     """Check whether a given expiry datetime is in the past."""
     return datetime.utcnow() > expiry_dt
+ 

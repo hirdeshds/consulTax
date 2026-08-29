@@ -97,3 +97,4 @@ def get_available_rule_versions() -> List[str]:
 def clear_rules_cache() -> None:
     """Clear memory cache for rules configurations."""
     load_rules_config.cache_clear()
+ 

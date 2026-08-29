@@ -156,4 +156,4 @@ class RuleResult(BaseModel):
     recommendations: List[str] = Field(default_factory=list)
     action_items: List[str] = Field(default_factory=list)
     metadata: Dict[str, Any] = Field(default_factory=dict)
-
+ 

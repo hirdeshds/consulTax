@@ -430,3 +430,4 @@ async def summarize_form_16(file: UploadFile = File(...)):
     result = _extract_figures_from_text(text)
     result["summary_source"] = f"Extracted from {file.filename}"
     return result
+ 

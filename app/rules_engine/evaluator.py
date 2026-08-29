@@ -513,3 +513,4 @@ def simulate_tax_adjustments(
         net_savings=net_savings,
         rule_breakdown=projected_calc["rule_results"],
     )
+ 

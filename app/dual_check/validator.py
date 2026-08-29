@@ -140,3 +140,4 @@ def validate_ocr_vs_computed(
         computed_totals=computed_totals,
         differences=differences
     )
+ 

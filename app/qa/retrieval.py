@@ -196,3 +196,4 @@ retriever = TFIDFRetriever()
 def get_retriever() -> TFIDFRetriever:
     """Dependency accessor for the retriever singleton."""
     return retriever
+ 

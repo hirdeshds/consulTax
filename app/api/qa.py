@@ -140,3 +140,4 @@ async def chat_interaction(
         created_at=datetime.now(timezone.utc),
         metadata={"preferred_language": request.preferred_language},
     )
+ 

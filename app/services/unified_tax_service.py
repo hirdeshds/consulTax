@@ -582,3 +582,4 @@ def generate_llm_explanation_sync(
             f"resulting in a tax liability of ₹{old_res['total_tax']:,.0f} (vs ₹{new_res['total_tax']:,.0f} under New Regime). "
             f"You save ₹{savings:,.0f} by leveraging Chapter VI-A statutory deductions and exemptions."
         )
+ 

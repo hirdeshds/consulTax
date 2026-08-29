@@ -227,3 +227,4 @@ class SimulateResponse(BaseModel):
     comparison: Optional[Dict[str, Any]] = None
     recommendations: Optional[List[Dict[str, Any]]] = None
     disclaimer: str = Field(default=DISCLAIMER, description="Regulatory disclaimer — not a certified tax authority")
+ 

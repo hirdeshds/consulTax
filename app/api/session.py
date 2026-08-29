@@ -71,4 +71,4 @@ def delete_session(
             detail=f"Session {session_id} not found or could not be deleted."
         )
     return {"status": "success", "message": f"Session {session_id} successfully closed."}
-
+ 

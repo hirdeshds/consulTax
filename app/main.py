@@ -66,3 +66,4 @@ def read_root():
         "environment": settings.ENVIRONMENT,
         "status": "healthy"
     }
+ 
