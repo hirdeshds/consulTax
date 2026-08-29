@@ -7,6 +7,15 @@ from pydantic import BaseModel, Field
 
 from app.schemas.domain import DocumentData, RuleResult, TaxDocument, TaxProfile, TaxRegime
 
+# Hard constraint: disclaimer must appear in every API response payload, not just docs.
+DISCLAIMER = (
+    "consulTax is an AI-powered advisory tool and is NOT a certified tax authority. "
+    "All recommendations are based on the information you provide and the rules configured "
+    "in the system. They may not account for all individual circumstances. "
+    "Always consult a qualified Chartered Accountant (CA) or registered tax professional "
+    "before making any filing decisions. No real financial data is collected or stored."
+)
+
 
 class AnalyzeRequest(BaseModel):
     document: Optional[TaxDocument] = None
@@ -42,6 +51,7 @@ class AnalyzeResponse(BaseModel):
     potential_savings: Optional[float] = None
     applied_rules: List[RuleResult] = Field(default_factory=list)
     optimization_tips: List[str] = Field(default_factory=list)
+    disclaimer: str = Field(default=DISCLAIMER, description="Regulatory disclaimer — not a certified tax authority")
 
 
 class ChatMessage(BaseModel):
@@ -80,12 +90,14 @@ class ChatResponse(BaseModel):
     rule_results: List[RuleResult] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     metadata: Dict[str, Any] = Field(default_factory=dict)
+    disclaimer: str = Field(default=DISCLAIMER, description="Regulatory disclaimer — not a certified tax authority")
 
 
 class OCRUploadResponse(BaseModel):
     document: DocumentData
     status: str = "success"
     message: Optional[str] = None
+    disclaimer: str = Field(default=DISCLAIMER, description="Regulatory disclaimer — not a certified tax authority")
 
 
 class SimulateRequest(BaseModel):
@@ -99,4 +111,5 @@ class SimulateResponse(BaseModel):
     projected_liability: float
     net_savings: float
     rule_breakdown: List[RuleResult] = Field(default_factory=list)
+    disclaimer: str = Field(default=DISCLAIMER, description="Regulatory disclaimer — not a certified tax authority")
 

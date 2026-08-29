@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
+from app.api.analyze import build_reason
 from app.pdf.filing_summary import generate_filing_summary_pdf
 from app.rules_engine.evaluator import evaluate_tax_profile
 from app.schemas.api import AnalyzeResponse, DeductionResult, SchemeResult
@@ -9,6 +10,7 @@ from app.schemas.domain import RuleCategory
 from app.session import get_session_store, SessionStore
 
 router = APIRouter(prefix="/export", tags=["export"])
+
 
 
 @router.get("/health")
@@ -55,20 +57,19 @@ def download_filing_summary(
     schemes_results = []
     for rule in eval_res.applied_rules:
         if rule.is_applicable and rule.is_eligible:
-            sect = f" under {rule.legal_section}" if rule.legal_section else ""
             if rule.category in (RuleCategory.DEDUCTION, RuleCategory.EXEMPTION):
                 deductions_results.append(DeductionResult(
                     title=rule.rule_name,
                     amount=rule.eligible_amount,
                     ruleId=rule.rule_id,
-                    reason=rule.description or f"Eligible deduction{sect}",
+                    reason=build_reason(rule),
                     confidence="confirmed"
                 ))
             else:
                 schemes_results.append(SchemeResult(
                     title=rule.rule_name,
                     ruleId=rule.rule_id,
-                    reason=rule.description or f"Eligible tax scheme option{sect}",
+                    reason=build_reason(rule),
                     confidence="confirmed"
                 ))
 

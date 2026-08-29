@@ -4,13 +4,62 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Optional
 
 from app.schemas.api import AnalyzeRequest, AnalyzeResponse, DeductionResult, SchemeResult
-from app.schemas.domain import TaxProfile, TaxRegime, RuleCategory, TaxDocument
+from app.schemas.domain import TaxProfile, TaxRegime, RuleCategory, TaxDocument, RuleResult
 from app.session import get_session_store, SessionStore
 from app.rules_engine.evaluator import evaluate_tax_profile
 from app.dual_check.validator import validate_ocr_vs_computed
 from app.explanation.generator import generate_explanation
 
 router = APIRouter(prefix="/analyze", tags=["analyze"])
+
+
+def build_reason(rule: RuleResult) -> str:
+    """
+    Build a plain-language, non-expert-friendly 'why' sentence for a rule result.
+    Cites the exact legal section, limit, claimed amount, unclaimed gap, and
+    potential additional tax saving where applicable.
+    """
+    sect = f"{rule.legal_section}" if rule.legal_section else rule.rule_name
+    claimed = rule.claimed_amount
+    eligible = rule.eligible_amount
+    limit = rule.max_limit
+    savings = rule.potential_savings
+
+    # Case 1: Has a defined limit and the user has claimed something
+    if limit and limit > 0 and claimed > 0:
+        gap = max(0.0, limit - claimed)
+        if gap > 0:
+            extra_saving = round(gap * 0.30, 2)  # Approximate 30% slab saving on gap
+            return (
+                f"{sect} allows up to \u20b9{limit:,.0f}/year. "
+                f"You claimed \u20b9{claimed:,.0f} \u2014 \u20b9{gap:,.0f} still unused. "
+                f"Investing that gap could save an additional \u20b9{extra_saving:,.0f} in taxes."
+            )
+        else:
+            return (
+                f"{sect}: You have fully utilised the \u20b9{limit:,.0f} limit. "
+                f"Total deduction applied: \u20b9{eligible:,.0f}."
+            )
+
+    # Case 2: Has a limit but nothing claimed yet — opportunity tip
+    if limit and limit > 0 and claimed == 0:
+        extra_saving = round(limit * 0.30, 2)
+        return (
+            f"{sect} allows up to \u20b9{limit:,.0f}/year — you have not claimed this yet. "
+            f"Claiming the full amount could save you up to \u20b9{extra_saving:,.0f} in taxes."
+        )
+
+    # Case 3: No cap (e.g. 80E education loan interest — unlimited)
+    if claimed > 0:
+        return (
+            f"{sect}: \u20b9{eligible:,.0f} applied. "
+            + (f"Potential tax saving: \u20b9{savings:,.0f}." if savings > 0 else "No upper limit applies.")
+        )
+
+    # Fallback: generic description
+    description = rule.description or f"Eligible deduction under {sect}"
+    return description
+
 
 
 def map_document_to_profile(doc: TaxDocument, profile: TaxProfile) -> None:
@@ -138,23 +187,22 @@ async def analyze_tax_assessment(
     # 6. Populate Deductions and Schemes lists from rule evaluation
     deductions_results = []
     schemes_results = []
-    
+
     for rule in eval_res.applied_rules:
         if rule.is_applicable and rule.is_eligible:
-            sect = f" under {rule.legal_section}" if rule.legal_section else ""
             if rule.category in (RuleCategory.DEDUCTION, RuleCategory.EXEMPTION):
                 deductions_results.append(DeductionResult(
                     title=rule.rule_name,
                     amount=rule.eligible_amount,
                     ruleId=rule.rule_id,
-                    reason=rule.description or f"Eligible deduction{sect}",
+                    reason=build_reason(rule),
                     confidence="confirmed"
                 ))
             else:
                 schemes_results.append(SchemeResult(
                     title=rule.rule_name,
                     ruleId=rule.rule_id,
-                    reason=rule.description or f"Eligible tax scheme option{sect}",
+                    reason=build_reason(rule),
                     confidence="confirmed"
                 ))
 
